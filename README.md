@@ -30,3 +30,39 @@ El apartado de aplication properties funciona como puente para conectar la aplic
     * Se agregaron las credenciales y URL de conexión en application.properties. 
     * Se configuró Hibernate (ddl-auto=update) para la creación automática de tablas.
     * Se definió el dialecto de PostgreSQL para la persistencia de datos.
+
+### Capa de Servicios y Lógica de Negocio (service)
+
+El paquete `service` constituye el núcleo central (el "cerebro") de la aplicación. Aquí se implementan estrictamente todas las reglas operativas, se coordina el acceso a los repositorios y se garantiza la integridad de los datos a través del manejo de transacciones.
+
+#### Componentes Principales:
+* **AuthService:** Encargado de la lógica de registro y acceso. Gestiona el registro de usuarios asignando el rol predeterminado LECTOR[cite: 1], asegura el manejo adecuado de contraseñas con PasswordEncoder (BCrypt)[cite: 1] y orquesta la generación de tokens JWT tras validar las credenciales[cite: 1].
+* **LibroService:** Administra el catálogo de la biblioteca, encapsulando las operaciones CRUD y controlando las modificaciones sobre el inventario físico (stock total y disponible).
+* **PrestamoService:** Concentra las operaciones más críticas del sistema. Implementa un estricto control transaccional (@Transactional) en el flujo de préstamo y devolución[cite: 1] para garantizar que los datos no se corrompan bajo estrés extremo o alta concurrencia.
+
+#### Reglas de Negocio Implementadas:
+Esta capa valida en tiempo real las restricciones de la biblioteca antes de persistir cualquier cambio en la base de datos:
+* Valida que un libro no pueda prestarse si su número de ejemplares disponibles es 0[cite: 1].
+* Garantiza que un usuario con rol LECTOR no pueda tener más de 3 préstamos activos simultáneamente[cite: 1].
+* Calcula automáticamente el plazo de entrega de 14 días para cada préstamo[cite: 1].
+* Verifica el historial del usuario y, si no devuelve un libro en la fecha pactada, lo pasa a estado SANCIONADO automáticamente al intentar un nuevo préstamo[cite: 1].
+
+#### Manejo de Excepciones:
+Los servicios están diseñados para interrumpir su ejecución de manera limpia y segura si se rompe alguna regla. En lugar de retornar respuestas HTTP directamente, lanzan excepciones personalizadas (ej. ResourceNotFoundException, BusinessRuleException)[cite: 1], delegando la responsabilidad de formatear el error al `ControllerAdvice`.
+
+#### 4. Capa de Transferencia de Datos (dto)
+Para cumplir con las buenas prácticas de arquitectura y evitar la exposición directa de las entidades de persistencia, se implementó el patrón DTO (Data Transfer Object) dividido en solicitudes y respuestas:
+* request/: Contiene los objetos que reciben la información desde el cliente (ej. LoginRequestDTO, RegistroRequestDTO, LibroRequestDTO).
+* response/: Contiene los objetos optimizados que se envían de regreso al cliente (ej. AuthResponseDTO, PrestamoResponseDTO, ErrorDTO).
+
+#### 5. Capa de Controladores (controller)
+El paquete `controller` expone los endpoints RESTful de la API, organizados por dominios de negocio y asegurando un diseño limpio:
+* AuthController: Gestiona los endpoints públicos para el registro de usuarios (con rol predeterminado LECTOR)[cite: 1] y el inicio de sesión con generación de tokens JWT[cite: 1].
+* LibroController: Administra los endpoints protegidos para el CRUD completo del catálogo de libros y el control de inventario físico[cite: 1].
+* PrestamoController: Orquesta las operaciones de salida y devolución de libros, conectando directamente con las reglas transaccionales del servicio[cite: 1].
+
+#### 6. Manejo Global de Excepciones (exception)
+El sistema cuenta con una arquitectura centralizada de control de errores mediante @RestControllerAdvice (GlobalExceptionHandler):
+* Intercepta excepciones personalizadas como ResourceNotFoundException (retornando HTTP 404 Not Found) y BusinessRuleException (retornando HTTP 400 Bad Request)[cite: 1].
+* Captura excepciones generales del sistema para evitar volcado de datos sensibles (stack traces) hacia el cliente.
+* Estandariza todas las respuestas de error bajo el esquema ErrorDTO, devolviendo siempre un JSON limpio que incluye el mensaje descriptivo y el código de estado HTTP correspondiente.
