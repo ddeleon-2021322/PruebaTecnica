@@ -24,3 +24,9 @@ El paquete `repository` actúa como la capa de acceso a datos (Data Access Layer
     * Incluye métodos de consulta por fechas para detectar en tiempo real si un préstamo no se devuelve en la fecha pactada[cite: 1].
     * Permite la actualización automática del infractor al estado SANCIONADO al intentar un nuevo préstamo[cite: 1].
     * UsuarioRepository expone métodos de búsqueda por email (findByEmail) esenciales para la resolución del filtro de autenticación Stateless basado en tokens JWT[cite: 1].
+
+#### 3. Aplication.properties (Conexion a base de datos) 
+El apartado de aplication properties funciona como puente para conectar la aplicacion con un base de datos PostgreSQL
+    * Se agregaron las credenciales y URL de conexión en application.properties. 
+    * Se configuró Hibernate (ddl-auto=update) para la creación automática de tablas.
+    * Se definió el dialecto de PostgreSQL para la persistencia de datos.
