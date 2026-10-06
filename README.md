@@ -49,3 +49,20 @@ Esta capa valida en tiempo real las restricciones de la biblioteca antes de pers
 
 #### Manejo de Excepciones:
 Los servicios están diseñados para interrumpir su ejecución de manera limpia y segura si se rompe alguna regla. En lugar de retornar respuestas HTTP directamente, lanzan excepciones personalizadas (ej. ResourceNotFoundException, BusinessRuleException)[cite: 1], delegando la responsabilidad de formatear el error al `ControllerAdvice`.
+
+#### 4. Capa de Transferencia de Datos (dto)
+Para cumplir con las buenas prácticas de arquitectura y evitar la exposición directa de las entidades de persistencia, se implementó el patrón DTO (Data Transfer Object) dividido en solicitudes y respuestas:
+* request/: Contiene los objetos que reciben la información desde el cliente (ej. LoginRequestDTO, RegistroRequestDTO, LibroRequestDTO).
+* response/: Contiene los objetos optimizados que se envían de regreso al cliente (ej. AuthResponseDTO, PrestamoResponseDTO, ErrorDTO).
+
+#### 5. Capa de Controladores (controller)
+El paquete `controller` expone los endpoints RESTful de la API, organizados por dominios de negocio y asegurando un diseño limpio:
+* AuthController: Gestiona los endpoints públicos para el registro de usuarios (con rol predeterminado LECTOR)[cite: 1] y el inicio de sesión con generación de tokens JWT[cite: 1].
+* LibroController: Administra los endpoints protegidos para el CRUD completo del catálogo de libros y el control de inventario físico[cite: 1].
+* PrestamoController: Orquesta las operaciones de salida y devolución de libros, conectando directamente con las reglas transaccionales del servicio[cite: 1].
+
+#### 6. Manejo Global de Excepciones (exception)
+El sistema cuenta con una arquitectura centralizada de control de errores mediante @RestControllerAdvice (GlobalExceptionHandler):
+* Intercepta excepciones personalizadas como ResourceNotFoundException (retornando HTTP 404 Not Found) y BusinessRuleException (retornando HTTP 400 Bad Request)[cite: 1].
+* Captura excepciones generales del sistema para evitar volcado de datos sensibles (stack traces) hacia el cliente.
+* Estandariza todas las respuestas de error bajo el esquema ErrorDTO, devolviendo siempre un JSON limpio que incluye el mensaje descriptivo y el código de estado HTTP correspondiente.
