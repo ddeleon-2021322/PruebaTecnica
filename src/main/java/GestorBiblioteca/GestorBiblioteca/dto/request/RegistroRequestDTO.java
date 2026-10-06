@@ -1,4 +1,9 @@
 package GestorBiblioteca.GestorBiblioteca.dto.request;
+import lombok.Data;
 
-public class RegistroRequestDTO     {
+@Data
+public class RegistroRequestDTO {
+    private String nombre;
+    private String email;
+    private String password;
 }
