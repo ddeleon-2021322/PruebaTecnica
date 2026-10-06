@@ -1,4 +1,3 @@
 package GestorBiblioteca.GestorBiblioteca.entity;
 
-public class RolUsuario {
-}
+public enum RolUsuario { ADMIN, BIBLIOTECARIO, LECTOR } //[cite: 1]
