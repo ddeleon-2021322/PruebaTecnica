@@ -1,4 +1,2 @@
 package GestorBiblioteca.GestorBiblioteca.entity;
-
-public class EstadoUsuario {
-}
+public enum EstadoUsuario { ACTIVO, SANCIONADO } //[cite: 1]

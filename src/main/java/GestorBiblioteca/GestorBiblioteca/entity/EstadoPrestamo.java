@@ -1,4 +1,2 @@
 package GestorBiblioteca.GestorBiblioteca.entity;
-
-public class EstadoPrestamo {
-}
+public enum EstadoPrestamo { ACTIVO, DEVUELTO, ATRASADO } //[cite: 1]
